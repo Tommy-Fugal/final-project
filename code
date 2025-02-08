@@ -1,0 +1,102 @@
+# Import necessary libraries
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, accuracy_score
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Step 1: Load the dataset (assuming it’s a CSV inside a .zip file)
+df = pd.read_csv('shopping.zip')
+
+# Step 2: Exploratory Data Analysis (EDA)
+
+# 2.1 Summary of the dataset
+print(df.info())
+print(df.describe())
+
+# 2.2 Visualizing the distribution of numerical features
+sns.histplot(df['Tenure_Months'], kde=True)
+plt.title('Distribution of Tenure (Months)')
+plt.show()
+
+# Visualizing correlations between numerical features
+corr_matrix = df.corr()
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation Matrix')
+plt.show()
+
+# Visualizing the distribution of categorical features
+sns.countplot(x='Gender', data=df)
+plt.title('Gender Distribution')
+plt.show()
+
+sns.countplot(x='Product_Category', data=df)
+plt.title('Product Category Distribution')
+plt.show()
+
+# Step 3: Preprocessing
+
+# 3.1 Handling Missing Values
+print(df.isnull().sum())
+
+# Fill missing values
+df['Online_Spend'] = df['Online_Spend'].fillna(df['Online_Spend'].mean())
+df['Product_Category'] = df['Product_Category'].fillna(df['Product_Category'].mode()[0])
+
+# 3.2 Encoding Categorical Variables
+label_encoder = LabelEncoder()
+
+df['Gender'] = label_encoder.fit_transform(df['Gender'])  # Male=0, Female=1
+df['Product_Category'] = label_encoder.fit_transform(df['Product_Category'])
+df['Month'] = label_encoder.fit_transform(df['Month'])
+
+# 3.3 Scaling Numerical Features
+scaler = StandardScaler()
+df[['Tenure_Months', 'Quantity', 'Avg_Price', 'Delivery_Charges', 'GST', 'Offline_Spend', 'Online_Spend', 'Discount_pct']] = scaler.fit_transform(df[['Tenure_Months', 'Quantity', 'Avg_Price', 'Delivery_Charges', 'GST', 'Offline_Spend', 'Online_Spend', 'Discount_pct']])
+
+# Step 4: Model Implementation
+
+# 4.1 Select features (X) and target (y)
+X = df[['Tenure_Months', 'Quantity', 'Avg_Price', 'Delivery_Charges', 'GST', 'Offline_Spend', 'Online_Spend', 'Discount_pct']]
+y = df['Coupon_Status']  # Assuming 'Coupon_Status' is the target variable
+
+# 4.2 Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 4.3 Logistic Regression Model
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# 4.4 Make predictions and evaluate the Logistic Regression model
+y_pred = model.predict(X_test)
+
+# Evaluate Logistic Regression model
+print(f"Logistic Regression Accuracy: {accuracy_score(y_test, y_pred):.2f}")
+print("Logistic Regression Classification Report:\n", classification_report(y_test, y_pred))
+
+# Step 5: Model Evaluation
+
+# If the model were regression, we'd use R2 and RMSE metrics.
+# Uncomment and use below for regression problems (e.g., predicting 'Online_Spend' or 'Offline_Spend')
+# y_pred_reg = model.predict(X_test)
+# rmse = mean_squared_error(y_test, y_pred_reg, squared=False)
+# r2 = r2_score(y_test, y_pred_reg)
+# print(f"RMSE: {rmse:.2f}")
+# print(f"R-squared: {r2:.2f}")
+
+# Step 6: Advanced Techniques (Optional for Extra Credit)
+
+# 6.1 Random Forest Classifier
+rf_model = RandomForestClassifier(random_state=42)
+rf_model.fit(X_train, y_train)
+
+# 6.2 Make predictions and evaluate the Random Forest model
+y_pred_rf = rf_model.predict(X_test)
+
+# Evaluate Random Forest model
+print(f"Random Forest Accuracy: {accuracy_score(y_test, y_pred_rf):.2f}")
+print("Random Forest Classification Report:\n", classification_report(y_test, y_pred_rf))
